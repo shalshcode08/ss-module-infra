@@ -1,0 +1,17 @@
+{
+  "name": "ss-module-infra",
+  "private": true,
+  "workspaces": [
+    "app-api",
+    "app-service",
+    "app-webapp",
+    "app-website"
+  ],
+  "scripts": {
+    "api": "cd app-api && bun --env-file=../.env run dev",
+    "service": "cd app-service && bun --env-file=../.env run dev",
+    "webapp": "cd app-webapp && bun --env-file=../.env run dev",
+    "website": "cd app-website && bun --env-file=../.env run dev",
+    "dev": "bun run api & bun run service & bun run webapp & bun run website"
+  }
+}
