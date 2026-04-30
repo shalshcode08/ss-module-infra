@@ -1,13 +1,13 @@
 import express from "express";
+import { config } from "./config";
+import { logger } from "./config/logger";
+import { loggerMiddleware } from "./middlewares/logger.middleware";
 
 const app = express();
-const PORT = process.env.APP_API_PORT;
 
 app.use(express.json());
-app.use("/api/v1", () => {
-  console.log("this is testing");
-});
+app.use(loggerMiddleware);
 
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+app.listen(config.port, () => {
+  logger.info(`app-api started on port ${config.port}`);
 });
