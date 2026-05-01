@@ -1,3 +1,4 @@
+import "./shared/types";
 import express from "express";
 import { config } from "./config";
 import { logger } from "./config/logger";
@@ -9,6 +10,7 @@ const app = express();
 
 app.use(express.json());
 app.use(loggerMiddleware);
+
 app.use("/api/v1", appRouter);
 app.use(errorMiddleware);
 

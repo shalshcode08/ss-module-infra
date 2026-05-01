@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OAuthProvider {
+  GOOGLE
+}
+
+enum AttachmentType {
+  IMAGE
+  PDF
+  DOC
+  EXCEL
+  OTHER
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+}
+
+enum QuestionStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+  FAILED
+}
+
+// model - user ------------------------
+model User {
+  id         String   @id @default(uuid())
+  supabaseId String   @unique
+  email      String   @unique
+  name       String?
+  avatarUrl  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  questions     Question[]
+  oauthAccounts OAuthAccount[]
+  reactions     Reaction[]
+
+  @@map("users")
+}
+
+// model - oauth account ------------------------
+model OAuthAccount {
+  id             String        @id @default(uuid())
+  userId         String
+  provider       OAuthProvider
+  providerUserId String
+  accessToken    String?
+  refreshToken   String?
+  tokenExpiresAt DateTime?
+  createdAt      DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@map("oauth_accounts")
+}
+
+// model - question ------------------------
+model Question {
+  id        String         @id @default(uuid())
+  userId    String
+  plainText String
+  slug      String         @unique
+  status    QuestionStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments QuestionAttachment[]
+  solutions   Solution[]
+  share       Share?
+
+  @@index([userId])
+  @@index([status])
+  @@map("questions")
+}
+
+// model - question attachment ------------------------
+model QuestionAttachment {
+  id               String         @id @default(uuid())
+  questionId       String
+  type             AttachmentType
+  url              String
+  originalFilename String?
+  mimeType         String?
+  sizeBytes        Int?
+  thumbnailUrl     String?
+  createdAt        DateTime       @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("question_attachments")
+}
+
+// model - solution ------------------------
+model Solution {
+  id         String   @id @default(uuid())
+  questionId String
+  version    Int      @default(1)
+  content    String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  question  Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+
+  @@index([questionId, isActive])
+  @@map("solutions")
+}
+
+// model - reaction ------------------------
+model Reaction {
+  id         String       @id @default(uuid())
+  userId     String
+  solutionId String
+  type       ReactionType
+  createdAt  DateTime     @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, solutionId])
+  @@map("reactions")
+}
+
+// model - share ------------------------
+model Share {
+  id         String   @id @default(uuid())
+  questionId String   @unique
+  publicSlug String   @unique
+  publicUrl  String
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("shares")
+}
