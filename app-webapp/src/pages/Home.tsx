@@ -1,5 +1,11 @@
+import { RichTextInput } from "@/components/RichTextInput";
+
 const HomePage = () => {
-  return <div>Home</div>;
+  return (
+    <div className="w-full">
+      <RichTextInput />
+    </div>
+  );
 };
 
 export default HomePage;
