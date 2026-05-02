@@ -4,7 +4,9 @@ import { AuthController } from "./auth.controller";
 
 const router = Router();
 
-router.post("/login", AuthController.login);
+router.get("/google", AuthController.redirectToGoogle);
+router.get("/callback", AuthController.handleCallback);
 router.get("/me", AuthMiddleware.requireAuth, AuthController.me);
+router.post("/logout", AuthMiddleware.requireAuth, AuthController.logout);
 
 export default router;

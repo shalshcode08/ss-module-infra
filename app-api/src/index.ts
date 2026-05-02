@@ -1,5 +1,7 @@
 import "./shared/types";
 import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 import { config } from "./config";
 import { logger } from "./config/logger";
 import { loggerMiddleware } from "./middlewares/logger.middleware";
@@ -8,7 +10,9 @@ import appRouter from "./routes";
 
 const app = express();
 
+app.use(cors({ origin: config.clientUrl, credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 app.use(loggerMiddleware);
 
 app.use("/api/v1", appRouter);

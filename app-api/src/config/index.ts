@@ -6,14 +6,13 @@ const required = (key: string): string => {
 
 export const config = {
   port: Number(required("APP_API_PORT")),
-  webappUrl: required("APP_WEB_URL"),
-} as const;
-
-export const supabaseConfig = {
-  url: required("SUPABASE_URL"),
-  key: required("SUPABASE_ANON_KEY"),
-  serviceKey: required("SUPABASE_SERVICE_KEY"),
+  clientUrl: required("APP_CLIENT_URL"),
+  jwtSecret: required("JWT_SECRET"),
+  google: {
+    clientId: required("CLIENT_ID"),
+    clientSecret: required("CLIENT_SECRET"),
+    redirectUri: required("GOOGLE_REDIRECT_URI"),
+  },
 } as const;
 
 export type Config = typeof config;
-export type SupabaseConfig = typeof supabaseConfig;

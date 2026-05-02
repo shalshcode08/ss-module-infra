@@ -1,35 +1,20 @@
 import type { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import { HttpError } from "../shared/errors/HttpError";
-import { supabase } from "../config/supabase";
-import { prisma } from "../db";
+import { config } from "../config";
+import type { JwtUser } from "../shared/types";
 
 export const AuthMiddleware = {
-  requireAuth: async (req: Request, _res: Response, next: NextFunction) => {
+  requireAuth: (req: Request, _res: Response, next: NextFunction) => {
     try {
-      const token = req.headers.authorization?.replace("Bearer ", "");
-      if (!token) {
-        throw HttpError.unauthorized("No token provided");
-      }
+      const token = req.cookies?.auth_token;
+      if (!token) throw HttpError.unauthorized("Not authenticated");
 
-      const { data, error } = await supabase.auth.getUser(token);
-      if (error || !data.user) {
-        throw HttpError.unauthorized("Invalid token");
-      }
-
-      const user = await prisma.user.findUnique({
-        where: {
-          supabaseId: data.user.id,
-        },
-      });
-
-      if (!user) {
-        throw HttpError.unauthorized("User not found");
-      }
-
+      const user = jwt.verify(token, config.jwtSecret) as JwtUser;
       req.user = user;
       next();
-    } catch (err) {
-      next(err);
+    } catch {
+      next(HttpError.unauthorized("Invalid or expired session"));
     }
   },
 };

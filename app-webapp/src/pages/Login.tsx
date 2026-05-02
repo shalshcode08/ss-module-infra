@@ -1,24 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
-import type { Provider } from "@supabase/supabase-js";
+import { Google } from "@/components/ui/svgs/google";
 
 const LoginPage = () => {
-  const supabase = createClient();
-
-  const handleLogin = async (provider: Provider) => {
-    await supabase.auth.signInWithOAuth({
-      provider: provider,
-      options: {
-        // We'll handle redirects in a top-level router later if needed
-        // For now, we'll rely on the default behavior or a simple callback
-        // Note: The 'redirectTo' option can be used to specify a custom return URL
-      },
-    });
+  const handleLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
   };
 
   return (
     <div>
-      <Button>Login With Google</Button>
+      <Button onClick={handleLogin} variant="outline">
+        <Google />
+        Login With Google
+      </Button>
     </div>
   );
 };

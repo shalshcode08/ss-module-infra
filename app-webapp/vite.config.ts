@@ -16,10 +16,6 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.VITE_API_URL": JSON.stringify(
         `http://localhost:${env.APP_API_PORT}/api/v1`,
       ),
-      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(env.SUPABASE_URL),
-      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
-        env.SUPABASE_PUBLISHABLE_KEY,
-      ),
     },
     server: {
       port: Number(env.APP_WEBAPP_PORT) || 3000,
