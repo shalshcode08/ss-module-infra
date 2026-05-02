@@ -1,10 +1,12 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AppLayout from "./components/layout/AppLayout";
 import PageLoader from "./components/ui/PageLoader";
 import AppRoutes from "./routes/app-routes.ts";
 import { useAuthStore } from "./stores/auth.store";
 import { useConfigStore } from "./stores/config.store";
+import HomePage from "./pages/Home.tsx";
 
 const LoginPage = lazy(() => import("./pages/Login"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -42,7 +44,9 @@ function App() {
           path={AppRoutes.HOME}
           element={
             <ProtectedRoute>
-              <div>Home</div>
+              <AppLayout>
+                <HomePage />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
