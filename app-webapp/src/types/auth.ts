@@ -6,7 +6,7 @@ export type AuthUser = {
 };
 
 export type UserConfig = {
-  id: string;
+  id: number;
   userId: string;
   isPremium: boolean;
 };
