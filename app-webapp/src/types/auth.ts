@@ -4,3 +4,9 @@ export type AuthUser = {
   name: string | null;
   avatarUrl: string | null;
 };
+
+export type UserConfig = {
+  id: string;
+  userId: string;
+  isPremium: boolean;
+};

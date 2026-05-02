@@ -2,8 +2,9 @@ import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PageLoader from "./components/ui/PageLoader";
-import AppRoutes from "./routes/index.ts";
+import AppRoutes from "./routes/app-routes.ts";
 import { useAuthStore } from "./stores/auth.store";
+import { useConfigStore } from "./stores/config.store";
 
 const LoginPage = lazy(() => import("./pages/Login"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -17,10 +18,20 @@ function RootRedirect() {
 
 function App() {
   const fetchUser = useAuthStore((state) => state.fetchUser);
+  const authStatus = useAuthStore((state) => state.status);
+  const fetchConfig = useConfigStore((state) => state.fetchConfig);
 
   useEffect(() => {
     fetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (authStatus === "authenticated") {
+      fetchConfig();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authStatus]);
 
   return (
     <Suspense fallback={<PageLoader />}>

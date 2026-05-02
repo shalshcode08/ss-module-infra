@@ -1,6 +1,6 @@
 import { Navigate } from "react-router";
 import { useAuthStore } from "@/stores/auth.store";
-import AppRoutes from "@/routes";
+import AppRoutes from "@/routes/app-routes";
 import PageLoader from "@/components/ui/PageLoader";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
