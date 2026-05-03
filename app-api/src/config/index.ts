@@ -13,6 +13,9 @@ export const config = {
     clientSecret: required("CLIENT_SECRET"),
     redirectUri: required("GOOGLE_REDIRECT_URI"),
   },
+  openRouter: {
+    apiKey: required("OPENROUTER_API_KEY"),
+  },
 } as const;
 
 export type Config = typeof config;
