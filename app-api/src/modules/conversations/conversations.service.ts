@@ -82,7 +82,7 @@ const runStream = async (
         content: accumulated,
         streamStatus: StreamStatus.COMPLETED,
         model,
-        fallBackUsed: fallbackUsed,
+        fallbackUsed,
         completedAt: new Date(),
       },
     });

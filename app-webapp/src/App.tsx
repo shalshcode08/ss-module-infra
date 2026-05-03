@@ -9,6 +9,8 @@ import { useConfigStore } from "./stores/config.store";
 import HomePage from "./pages/Home.tsx";
 
 const LoginPage = lazy(() => import("./pages/Login"));
+const ChatPage = lazy(() => import("./pages/Chat"));
+const HistoryPage = lazy(() => import("./pages/History"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function RootRedirect() {
@@ -46,6 +48,26 @@ function App() {
             <ProtectedRoute>
               <AppLayout>
                 <HomePage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={AppRoutes.CHAT}
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <ChatPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={AppRoutes.HISTORY}
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <HistoryPage />
               </AppLayout>
             </ProtectedRoute>
           }
