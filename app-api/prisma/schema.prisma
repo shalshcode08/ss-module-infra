@@ -36,6 +36,12 @@ enum QuestionStatus {
   FAILED
 }
 
+enum StreamStatus {
+  STREAMING
+  COMPLETED
+  FAILED
+}
+
 // model - user ------------------------
 model User {
   id        String   @id @default(uuid())
@@ -72,13 +78,14 @@ model OAuthAccount {
 
 // model - question ------------------------
 model Question {
-  id        String         @id @default(uuid())
-  userId    String
-  plainText String
-  slug      String         @unique
-  status    QuestionStatus @default(PENDING)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id          String         @id @default(uuid())
+  userId      String
+  plainText   String
+  slug        String         @unique
+  contentJson String?
+  status      QuestionStatus @default(PENDING)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
   user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   attachments QuestionAttachment[]
@@ -110,12 +117,16 @@ model QuestionAttachment {
 
 // model - solution ------------------------
 model Solution {
-  id         String   @id @default(uuid())
-  questionId String
-  version    Int      @default(1)
-  content    String
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
+  id           String       @id @default(uuid())
+  questionId   String
+  version      Int          @default(1)
+  content      String
+  streamStatus StreamStatus @default(STREAMING)
+  model        String?
+  fallBackUsed Boolean      @default(false)
+  completedAt  DateTime?
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
 
   question  Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
   reactions Reaction[]
