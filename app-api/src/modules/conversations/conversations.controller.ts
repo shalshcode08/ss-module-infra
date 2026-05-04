@@ -60,6 +60,16 @@ const getHistory = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const conversationsController = { create, stream, getQuestion, getHistory };
+const getRecent = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.id;
+    const recent = await conversationsService.getRecentQuestions(userId);
+    sendSuccess(res, recent);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const conversationsController = { create, stream, getQuestion, getHistory, getRecent };
 
 export default conversationsController;

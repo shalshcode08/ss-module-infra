@@ -82,7 +82,7 @@ const runStream = async (
         content: accumulated,
         streamStatus: StreamStatus.COMPLETED,
         model,
-        fallbackUsed,
+        fallBackUsed: fallbackUsed,
         completedAt: new Date(),
       },
     });
@@ -201,11 +201,21 @@ const getHistory = async (userId: string, limit = 20, offset = 0) => {
   });
 };
 
+const getRecentQuestions = async (userId: string) => {
+  return prisma.question.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+    select: { id: true, plainText: true, createdAt: true },
+  });
+};
+
 const conversationsService = {
   createQuestion,
   streamSolution,
   getQuestion,
   getHistory,
+  getRecentQuestions,
 };
 
 export default conversationsService;

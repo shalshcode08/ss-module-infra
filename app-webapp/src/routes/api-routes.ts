@@ -9,6 +9,7 @@ class API_ROUTES {
 
   static readonly CONVERSATIONS_CREATE = "/conversations/create";
   static readonly CONVERSATIONS_HISTORY = "/conversations/history";
+  static readonly CONVERSATIONS_HOME = "/conversations/home";
 
   static conversationsStream(questionId: string) {
     return `/conversations/stream/${questionId}`;

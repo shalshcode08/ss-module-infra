@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function RichTextInput() {
+export function RichTextInput({ compact = false }: { compact?: boolean }) {
   const navigate = useNavigate();
   const submit = useConversationStore((s) => s.submit);
   const status = useConversationStore((s) => s.status);
@@ -48,8 +48,16 @@ export function RichTextInput() {
     onUpdate: ({ editor }) => setIsEmpty(editor.isEmpty),
     editorProps: {
       attributes: {
-        class:
-          "rich-input outline-none min-h-[140px] max-h-[360px] overflow-y-auto px-4 py-4 text-sm text-slate-800 leading-relaxed",
+        class: compact
+          ? "rich-input outline-none min-h-[76px] max-h-[200px] overflow-y-auto px-4 py-3 text-sm text-slate-800 leading-relaxed"
+          : "rich-input outline-none min-h-[140px] max-h-[360px] overflow-y-auto px-4 py-4 text-sm text-slate-800 leading-relaxed",
+      },
+      handleKeyDown: (_view, event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+          handleSubmit();
+          return true;
+        }
+        return false;
       },
       handlePaste: (view, event) => {
         const text = event.clipboardData?.getData("text/plain") ?? "";
@@ -134,7 +142,9 @@ export function RichTextInput() {
         }
       `}</style>
 
-      <div className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all focus-within:border-slate-300 focus-within:shadow-md">
+      <div
+        className={`w-full overflow-hidden border border-slate-200 bg-white transition-all focus-within:border-indigo-600 ${compact ? "rounded-xl" : "rounded-2xl shadow-sm focus-within:shadow-md"}`}
+      >
         {/* Editor area */}
         <EditorContent editor={editor} />
 
@@ -153,19 +163,15 @@ export function RichTextInput() {
             <DropdownMenuContent
               align="start"
               sideOffset={8}
-              className="w-52 overflow-hidden rounded-xl border border-slate-100 bg-white p-1.5 shadow-lg"
+              className="w-44 overflow-hidden rounded-xl border border-slate-100 bg-white p-1 shadow-lg"
             >
-              <DropdownMenuItem className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 outline-none focus:bg-slate-50">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sky-50 text-sky-500">
-                  <ImageIcon className="h-3.5 w-3.5" />
-                </div>
-                <span className="text-xs font-medium text-slate-700">Upload Image</span>
+              <DropdownMenuItem className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 outline-none focus:bg-slate-50">
+                <ImageIcon className="h-3.5 w-3.5 shrink-0 text-sky-500" />
+                <span className="text-[12px] font-medium text-slate-700">Upload Image</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 outline-none focus:bg-slate-50">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-50 text-slate-500">
-                  <FileText className="h-3.5 w-3.5" />
-                </div>
-                <span className="text-xs font-medium text-slate-700">Upload Document</span>
+              <DropdownMenuItem className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 outline-none focus:bg-slate-50">
+                <FileText className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                <span className="text-[12px] font-medium text-slate-700">Upload Document</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

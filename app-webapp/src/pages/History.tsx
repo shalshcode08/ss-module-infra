@@ -47,7 +47,7 @@ export default function HistoryPage() {
     );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loading]);
+  }, [hasMore]);
 
   return (
     <div className="w-full self-start py-8">
@@ -56,7 +56,10 @@ export default function HistoryPage() {
       </h1>
 
       {items.length === 0 && !loading && (
-        <p className="text-sm text-slate-400">No questions yet.</p>
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <p className="text-sm font-medium text-slate-400">No questions yet</p>
+          <p className="mt-1 text-xs text-slate-300">Ask your first question from the home page</p>
+        </div>
       )}
 
       <div className="space-y-2">
@@ -86,8 +89,8 @@ export default function HistoryPage() {
         })}
       </div>
 
-      {/* Skeleton rows while loading */}
-      {loading && (
+      {/* Skeleton rows while loading — only shown on first load when no items exist yet */}
+      {loading && items.length === 0 && (
         <div className="mt-2 animate-pulse space-y-2">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="h-16 rounded-xl bg-slate-100" />

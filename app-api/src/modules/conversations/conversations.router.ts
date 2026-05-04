@@ -10,5 +10,6 @@ conversationsRouter.post("/create", conversationsController.create);
 conversationsRouter.get("/stream/:questionId", conversationsController.stream);
 conversationsRouter.get("/question/:questionId", conversationsController.getQuestion);
 conversationsRouter.get("/history", conversationsController.getHistory);
+conversationsRouter.get("/home", conversationsController.getRecent);
 
 export default conversationsRouter;

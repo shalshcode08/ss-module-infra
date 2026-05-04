@@ -31,7 +31,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
   fetchHistory: async (reset = false) => {
     if (get().loading) return;
     const page = reset ? 0 : get().page;
-    set({ loading: true });
+    set({ loading: true, ...(reset ? { hasMore: true, page: 0 } : {}) });
     try {
       const data = await api.get<HistoryItem[]>(
         `${API_ROUTES.CONVERSATIONS_HISTORY}?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`,

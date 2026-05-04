@@ -10,6 +10,7 @@ interface ConversationState {
   contentJson: string | null;
   solutionContent: string;
   status: ConversationStatus;
+  fetching: boolean;
   model: string | null;
   error: string | null;
 
@@ -28,6 +29,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   contentJson: null,
   solutionContent: "",
   status: "idle",
+  fetching: false,
   model: null,
   error: null,
 
@@ -50,6 +52,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
   loadQuestion: async (questionId) => {
     if (get().questionId === questionId) return;
+    set({ fetching: true });
     const data = await api.get<{
       plainText: string;
       contentJson: string | null;
@@ -70,6 +73,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       contentJson: data.contentJson,
       solutionContent: solution?.content ?? "",
       status,
+      fetching: false,
       model: solution?.model ?? null,
       error: null,
     });
@@ -86,6 +90,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       contentJson: null,
       solutionContent: "",
       status: "idle",
+      fetching: false,
       model: null,
       error: null,
     }),

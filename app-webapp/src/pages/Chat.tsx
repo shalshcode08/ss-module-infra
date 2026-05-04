@@ -1,10 +1,78 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { useConversationStore } from "@/stores/conversation.store";
 import { useSSE } from "@/hooks/useSSE";
+import { RichTextInput } from "@/components/RichTextInput";
+
+function useTypewriter(source: string, charsPerTick = 3, tickMs = 16) {
+  const [displayed, setDisplayed] = useState(source);
+  const sourceRef = useRef(source);
+  const indexRef = useRef(source.length);
+  const prevLengthRef = useRef(source.length);
+
+  useEffect(() => {
+    const prevLen = prevLengthRef.current;
+    const newLen = source.length;
+    prevLengthRef.current = newLen;
+    sourceRef.current = source;
+
+    if (source === "") {
+      indexRef.current = 0;
+      setDisplayed("");
+    } else if (newLen - prevLen > 200) {
+      // Bulk update (history load or SSE catchup) — show immediately without animation
+      indexRef.current = newLen;
+      setDisplayed(source);
+    }
+  }, [source]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const src = sourceRef.current;
+      if (indexRef.current < src.length) {
+        indexRef.current = Math.min(indexRef.current + charsPerTick, src.length);
+        setDisplayed(src.slice(0, indexRef.current));
+      }
+    }, tickMs);
+    return () => clearInterval(id);
+  }, []);
+
+  return displayed;
+}
+
+const LOADING_MESSAGES = [
+  "Thinking through your question…",
+  "Putting together an answer…",
+  "Almost there…",
+];
+
+function LoadingText() {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const cycle = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+        setVisible(true);
+      }, 400);
+    }, 2500);
+    return () => clearInterval(cycle);
+  }, []);
+
+  return (
+    <p
+      className="mb-3 text-xs text-slate-400 transition-opacity duration-400"
+      style={{ opacity: visible ? 1 : 0 }}
+    >
+      {LOADING_MESSAGES[index]}
+    </p>
+  );
+}
 
 export default function ChatPage() {
   const { questionId } = useParams<{ questionId: string }>();
@@ -12,8 +80,11 @@ export default function ChatPage() {
   const solutionContent = useConversationStore((s) => s.solutionContent);
   const status = useConversationStore((s) => s.status);
   const error = useConversationStore((s) => s.error);
+  const fetching = useConversationStore((s) => s.fetching);
   const loadQuestion = useConversationStore((s) => s.loadQuestion);
   const reset = useConversationStore((s) => s.reset);
+
+  const displayedContent = useTypewriter(solutionContent);
 
   useSSE(questionId ?? null);
 
@@ -22,91 +93,127 @@ export default function ChatPage() {
     return () => reset();
   }, [questionId]);
 
+  const isLoading = (status === "creating" || status === "streaming") && !solutionContent;
+
+  if (fetching) {
+    return (
+      <div className="w-full animate-pulse space-y-1 self-start py-8">
+        <div className="h-24 rounded-xl bg-slate-100" />
+        <div className="h-48 rounded-xl bg-slate-100" />
+      </div>
+    );
+  }
+
   return (
     <>
       <style>{`
-        .solution-body { font-size: 0.9rem; line-height: 1.75; color: #1e293b; }
-        .solution-body p { margin: 0 0 0.85em; }
-        .solution-body p:last-child { margin-bottom: 0; }
-        .solution-body h1,.solution-body h2,.solution-body h3 { font-weight: 700; margin: 1.25em 0 0.5em; color: #0f172a; }
-        .solution-body h1 { font-size: 1.25em; }
-        .solution-body h2 { font-size: 1.1em; }
-        .solution-body h3 { font-size: 1em; }
-        .solution-body ul { list-style: disc; padding-left: 1.4em; margin: 0.5em 0; }
-        .solution-body ol { list-style: decimal; padding-left: 1.4em; margin: 0.5em 0; }
-        .solution-body li { margin: 0.2em 0; }
-        .solution-body blockquote { border-left: 3px solid #e2e8f0; padding-left: 0.75em; margin: 0.5em 0; color: #64748b; }
-        .solution-body strong { font-weight: 600; }
-        .solution-body em { font-style: italic; }
-        .solution-body a { color: #6366f1; text-decoration: underline; }
-        .solution-body code:not(pre code) {
-          background: #eef2ff; border: 1px solid #e0e7ff; border-radius: 4px;
-          padding: 0.1em 0.35em; font-size: 0.82em;
-          font-family: ui-monospace, monospace; color: #6366f1;
+        .prose-answer { font-size: 0.9rem; line-height: 1.8; color: #334155; }
+        .prose-answer > *:first-child { margin-top: 0 !important; }
+        .prose-answer > *:last-child { margin-bottom: 0 !important; }
+        .prose-answer p { margin: 0 0 1em; }
+        .prose-answer h1, .prose-answer h2, .prose-answer h3 {
+          font-weight: 650; letter-spacing: -0.02em; color: #0f172a;
+          margin: 1.6em 0 0.5em;
         }
-        .solution-body pre {
-          background: #0f172a; border-radius: 10px;
-          padding: 1em 1.25em; margin: 0.75em 0; overflow-x: auto;
+        .prose-answer h1 { font-size: 1.2em; }
+        .prose-answer h2 { font-size: 1.08em; }
+        .prose-answer h3 { font-size: 0.95em; color: #475569; }
+        .prose-answer ul { list-style: disc; padding-left: 1.4em; margin: 0.75em 0; }
+        .prose-answer ul li { margin: 0.35em 0; }
+        .prose-answer ol { list-style: decimal; padding-left: 1.5em; margin: 0.75em 0; }
+        .prose-answer ol li { margin: 0.35em 0; }
+        .prose-answer strong { font-weight: 600; color: #1e293b; }
+        .prose-answer em { font-style: italic; color: #475569; }
+        .prose-answer a { color: #334155; text-decoration: underline; }
+        .prose-answer blockquote {
+          border-left: 2px solid #e2e8f0; padding-left: 1em;
+          margin: 1em 0; color: #64748b; font-style: italic;
         }
-        .solution-body pre code {
+        .prose-answer code:not(pre code) {
+          background: #f1f5f9; border-radius: 4px;
+          padding: 0.15em 0.4em; font-size: 0.8em;
+          font-family: ui-monospace, monospace; color: #334155;
+        }
+        .prose-answer pre {
+          background: #0d1117; border-radius: 10px;
+          padding: 1.1em 1.25em; margin: 1.1em 0;
+          overflow-x: auto; border: 1px solid #1e293b;
+        }
+        .prose-answer pre code {
           background: transparent; border: none; color: #e2e8f0;
-          padding: 0; font-size: 0.82em; font-family: ui-monospace, monospace;
+          font-size: 0.8em; font-family: ui-monospace, monospace; padding: 0;
         }
-        .solution-body table { width: 100%; border-collapse: collapse; margin: 0.75em 0; font-size: 0.85em; }
-        .solution-body th { background: #f8fafc; font-weight: 600; text-align: left; padding: 0.5em 0.75em; border: 1px solid #e2e8f0; }
-        .solution-body td { padding: 0.5em 0.75em; border: 1px solid #e2e8f0; }
-        .solution-body hr { border: none; border-top: 1px solid #e2e8f0; margin: 1em 0; }
+        .prose-answer table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.85em; }
+        .prose-answer th {
+          background: #f8fafc; font-weight: 600; text-align: left;
+          padding: 0.6em 0.85em; border: 1px solid #e2e8f0; color: #475569;
+          font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .prose-answer td { padding: 0.6em 0.85em; border: 1px solid #f1f5f9; }
+        .prose-answer tr:nth-child(even) td { background: #f8fafc; }
+        .prose-answer hr { border: none; border-top: 1px solid #f1f5f9; margin: 1.5em 0; }
+        .prose-answer .hljs-comment, .prose-answer .hljs-quote { color: #6e7681; font-style: italic; }
+        .prose-answer .hljs-keyword, .prose-answer .hljs-selector-tag { color: #ff7b72; }
+        .prose-answer .hljs-string, .prose-answer .hljs-attr { color: #a5d6ff; }
+        .prose-answer .hljs-title, .prose-answer .hljs-name { color: #d2a8ff; }
+        .prose-answer .hljs-number, .prose-answer .hljs-literal { color: #79c0ff; }
+        .prose-answer .hljs-built_in, .prose-answer .hljs-type { color: #ffa657; }
+        .prose-answer .hljs-variable, .prose-answer .hljs-template-variable { color: #ffa657; }
+        .prose-answer .hljs-tag { color: #7ee787; }
+        .prose-answer .hljs-meta { color: #e3b341; }
+        @keyframes shimmer {
+          0% { background-position: -400px 0; }
+          100% { background-position: 400px 0; }
+        }
+        .skeleton {
+          background: linear-gradient(90deg, #f1f5f9 25%, #e8edf5 50%, #f1f5f9 75%);
+          background-size: 800px 100%;
+          animation: shimmer 1.4s ease infinite;
+          border-radius: 4px;
+        }
       `}</style>
 
-      <div className="w-full space-y-6 py-8">
-        {/* Question */}
+      <div className="w-full space-y-1 self-start py-8">
         {plainText && (
-          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-            <p className="mb-2 text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
-              Question
-            </p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">
+          <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+            <p className="mb-1.5 text-sm font-bold text-slate-800">Question</p>
+            <p className="text-base leading-relaxed whitespace-pre-wrap text-slate-500">
               {plainText}
             </p>
           </div>
         )}
 
-        {/* Solution */}
-        <div className="min-h-[120px] rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-          <p className="mb-3 text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
-            Solution
-          </p>
-
-          {/* Streaming / creating skeleton */}
-          {(status === "creating" || status === "streaming") && !solutionContent && (
-            <div className="animate-pulse space-y-2.5">
-              <div className="h-3 w-3/4 rounded-full bg-slate-100" />
-              <div className="h-3 w-full rounded-full bg-slate-100" />
-              <div className="h-3 w-5/6 rounded-full bg-slate-100" />
+        {/* Solution block */}
+        <div className="min-h-[100px] rounded-xl border border-slate-200 bg-white px-5 py-4">
+          <p className="mb-3 text-sm font-bold text-slate-800">Answer</p>
+          {isLoading && (
+            <div className="space-y-3">
+              <LoadingText />
+              <div className="skeleton h-3 w-3/4" />
+              <div className="skeleton h-3 w-full" />
+              <div className="skeleton h-3 w-5/6" />
+              <div className="skeleton h-3 w-2/3" />
             </div>
           )}
 
-          {/* Progressive / completed content */}
-          {solutionContent && (
-            <div className="solution-body">
+          {displayedContent && (
+            <div className="prose-answer">
               <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                {solutionContent}
+                {displayedContent}
               </ReactMarkdown>
             </div>
           )}
 
-          {/* Streaming cursor */}
-          {status === "streaming" && solutionContent && (
-            <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-indigo-500 align-middle" />
-          )}
-
-          {/* Error */}
-          {status === "failed" && (
-            <p className="text-sm text-red-500">
+          {status === "failed" && !solutionContent && (
+            <p className="text-sm text-red-400">
               {error ?? "Something went wrong. Please try again."}
             </p>
           )}
         </div>
+
+        {status === "completed" && displayedContent.length >= solutionContent.length && (
+          <RichTextInput compact />
+        )}
       </div>
     </>
   );
