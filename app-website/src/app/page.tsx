@@ -24,7 +24,7 @@ export default async function HomePage({
   const { data: questions, totalPages, total } = await fetchPublicChats(page, 10);
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="flex-1 bg-slate-50">
       <div className="mx-auto max-w-3xl px-4 py-4">
         <div className="mb-4">
           <h1 className="text-xl font-semibold tracking-tight text-slate-900">Community Q&amp;A</h1>

@@ -3,9 +3,46 @@ import { useParams } from "react-router";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import { Share2, Check } from "lucide-react";
 import { useConversationStore } from "@/stores/conversation.store";
 import { useSSE } from "@/hooks/useSSE";
 import { RichTextInput } from "@/components/RichTextInput";
+
+const WEBSITE_URL = import.meta.env.VITE_WEBSITE_URL ?? "";
+
+function ShareButton({ slug }: { slug: string | null }) {
+  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState(false);
+
+  const handleShare = async () => {
+    if (!slug) return;
+    const url = `${WEBSITE_URL}/qna/${slug}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setToast(true);
+    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setToast(false), 2500);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={handleShare}
+        disabled={!slug}
+        className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
+      >
+        {copied ? <Check size={13} className="text-slate-500" /> : <Share2 size={13} />}
+        <span>{copied ? "Copied" : "Share"}</span>
+      </button>
+
+      {toast && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 fixed bottom-6 left-1/2 -translate-x-1/2 rounded-lg bg-slate-800 px-4 py-2 text-xs text-white shadow-lg duration-200">
+          Public link copied
+        </div>
+      )}
+    </div>
+  );
+}
 
 function useTypewriter(source: string, charsPerTick = 3, tickMs = 16) {
   const [displayed, setDisplayed] = useState(source);
@@ -77,6 +114,8 @@ function LoadingText() {
 export default function ChatPage() {
   const { questionId } = useParams<{ questionId: string }>();
   const plainText = useConversationStore((s) => s.plainText);
+  const slug = useConversationStore((s) => s.slug);
+  const storeQuestionId = useConversationStore((s) => s.questionId);
   const solutionContent = useConversationStore((s) => s.solutionContent);
   const status = useConversationStore((s) => s.status);
   const error = useConversationStore((s) => s.error);
@@ -86,7 +125,9 @@ export default function ChatPage() {
 
   const displayedContent = useTypewriter(solutionContent);
 
-  useSSE(questionId ?? null);
+  // Use store's questionId (not URL param) so SSE connects to the correct stream
+  // even during the brief window between submit() and navigation completing.
+  useSSE(storeQuestionId);
 
   useEffect(() => {
     if (questionId) loadQuestion(questionId);
@@ -212,7 +253,12 @@ export default function ChatPage() {
         </div>
 
         {status === "completed" && displayedContent.length >= solutionContent.length && (
-          <RichTextInput compact />
+          <>
+            <div className="flex px-1">
+              <ShareButton slug={slug} />
+            </div>
+            <RichTextInput compact />
+          </>
         )}
       </div>
     </>

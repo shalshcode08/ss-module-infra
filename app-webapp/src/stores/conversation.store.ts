@@ -6,6 +6,7 @@ export type ConversationStatus = "idle" | "creating" | "streaming" | "completed"
 
 interface ConversationState {
   questionId: string | null;
+  slug: string | null;
   plainText: string | null;
   contentJson: string | null;
   solutionContent: string;
@@ -25,6 +26,7 @@ interface ConversationState {
 
 export const useConversationStore = create<ConversationState>((set, get) => ({
   questionId: null,
+  slug: null,
   plainText: null,
   contentJson: null,
   solutionContent: "",
@@ -42,11 +44,11 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       error: null,
       model: null,
     });
-    const { questionId } = await api.post<{ questionId: string }>(API_ROUTES.CONVERSATIONS_CREATE, {
-      plainText,
-      contentJson,
-    });
-    set({ questionId, status: "streaming" });
+    const { questionId, slug } = await api.post<{ questionId: string; slug: string }>(
+      API_ROUTES.CONVERSATIONS_CREATE,
+      { plainText, contentJson },
+    );
+    set({ questionId, slug, status: "streaming" });
     return questionId;
   },
 
@@ -54,6 +56,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     if (get().questionId === questionId) return;
     set({ fetching: true });
     const data = await api.get<{
+      slug: string;
       plainText: string;
       contentJson: string | null;
       solutions: Array<{ content: string; streamStatus: string; model: string | null }>;
@@ -69,6 +72,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
     set({
       questionId,
+      slug: data.slug,
       plainText: data.plainText,
       contentJson: data.contentJson,
       solutionContent: solution?.content ?? "",
@@ -83,9 +87,13 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   setCatchup: (content) => set({ solutionContent: content }),
   setCompleted: (model) => set({ status: "completed", model }),
   setFailed: (error) => set({ status: "failed", error }),
-  reset: () =>
+  reset: () => {
+    // Don't clear state while a submit is in flight — the incoming chat page
+    // will find the store already populated and skip the loadQuestion refetch.
+    if (get().status === "streaming" || get().status === "creating") return;
     set({
       questionId: null,
+      slug: null,
       plainText: null,
       contentJson: null,
       solutionContent: "",
@@ -93,5 +101,6 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       fetching: false,
       model: null,
       error: null,
-    }),
+    });
+  },
 }));
