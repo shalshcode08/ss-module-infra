@@ -210,12 +210,55 @@ const getRecentQuestions = async (userId: string) => {
   });
 };
 
+const getAllPublicChats = async (page = 1, limit = 20) => {
+  const offset = (page - 1) * limit;
+  const where = { status: QuestionStatus.PUBLISHED };
+
+  const [data, total] = await prisma.$transaction([
+    prisma.question.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: offset,
+      include: {
+        solutions: {
+          where: { isActive: true },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { content: true, streamStatus: true, createdAt: true },
+        },
+      },
+    }),
+    prisma.question.count({ where }),
+  ]);
+
+  return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+};
+
+const getPublicChatByQuestionSlug = async (questionSlug: string) => {
+  return prisma.question.findFirst({
+    where: {
+      slug: questionSlug,
+      status: QuestionStatus.PUBLISHED,
+    },
+    include: {
+      solutions: {
+        where: { isActive: true },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
+  });
+};
+
 const conversationsService = {
   createQuestion,
   streamSolution,
   getQuestion,
   getHistory,
   getRecentQuestions,
+  getAllPublicChats,
+  getPublicChatByQuestionSlug,
 };
 
 export default conversationsService;

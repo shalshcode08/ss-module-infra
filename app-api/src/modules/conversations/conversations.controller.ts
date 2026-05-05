@@ -70,6 +70,37 @@ const getRecent = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const conversationsController = { create, stream, getQuestion, getHistory, getRecent };
+const getAllPublicChats = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Number(req.query.limit) || 20, 50);
+
+    const chats = await conversationsService.getAllPublicChats(page, limit);
+    sendSuccess(res, chats);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getPublicChatByQuestionSlug = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const questionSlug = req.params.questionSlug as string;
+    const question = await conversationsService.getPublicChatByQuestionSlug(questionSlug);
+    if (!question) throw HttpError.notFound("Chat not found");
+    sendSuccess(res, question);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const conversationsController = {
+  create,
+  stream,
+  getQuestion,
+  getHistory,
+  getRecent,
+  getAllPublicChats,
+  getPublicChatByQuestionSlug,
+};
 
 export default conversationsController;
