@@ -5,8 +5,9 @@ import path from "path";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, "../", "");
+  const isVercel = process.env.VERCEL === "1";
   const apiBaseUrl = (
-    env.VITE_API_URL ||
+    (isVercel ? "/api/v1" : env.VITE_API_URL) ||
     env.API_URL ||
     `http://localhost:${env.APP_API_PORT || 8080}/api/v1`
   ).replace(/\/+$/, "");

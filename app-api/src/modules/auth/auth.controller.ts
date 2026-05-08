@@ -4,13 +4,15 @@ import { AuthService } from "./auth.service";
 import { sendSuccess } from "../../shared/utils/response";
 import { config } from "../../config";
 
+const isProd = process.env.NODE_ENV === "production";
+
 const getCookieOptions = (req: Request): CookieOptions => {
   const forwardedProto = req.get("x-forwarded-proto")?.split(",")[0]?.trim();
   const isHttps = req.secure || forwardedProto === "https";
   return {
     httpOnly: true,
-    sameSite: isHttps ? "none" : "lax",
-    secure: isHttps,
+    sameSite: "lax",
+    secure: isProd || isHttps,
     path: "/",
     maxAge: 30 * 24 * 60 * 60 * 1000,
   };
