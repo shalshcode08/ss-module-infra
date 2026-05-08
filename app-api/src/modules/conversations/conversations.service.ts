@@ -4,6 +4,8 @@ import { prisma } from "../../db";
 import { QuestionStatus, StreamStatus } from "../../generated/prisma/enums";
 import { streamManager, type StreamEvent } from "../../shared/services/stream-manager";
 import { streamFromOpenRouter } from "../../shared/services/openrouter.service";
+import { buildSolutionMessages, type ImageContext } from "../../shared/prompts/solution.prompt";
+import { fetchImages } from "../../shared/services/tavily.service";
 import { initSSE, sendSSEEvent } from "../../shared/utils/sse";
 
 const createQuestion = async (userId: string, plainText: string, contentJson?: string) => {
@@ -19,7 +21,23 @@ const createQuestion = async (userId: string, plainText: string, contentJson?: s
     },
   });
 
-  const soution = await prisma.solution.create({
+  const tavilyImages = await fetchImages(plainText);
+
+  let savedImages: ImageContext[] = [];
+
+  if (tavilyImages.length > 0) {
+    await prisma.questionImage.createMany({
+      data: tavilyImages.map((img) => ({
+        id: img.id,
+        questionId: question.id,
+        url: img.url,
+        position: img.position,
+      })),
+    });
+    savedImages = tavilyImages.map(({ id, position }) => ({ id, position }));
+  }
+
+  const solution = await prisma.solution.create({
     data: {
       questionId: question.id,
       content: "",
@@ -27,8 +45,8 @@ const createQuestion = async (userId: string, plainText: string, contentJson?: s
     },
   });
 
-  const emmiter = streamManager.create(question.id);
-  runStream(question.id, soution.id, plainText, emmiter);
+  const emitter = streamManager.create(question.id);
+  runStream(question.id, solution.id, plainText, savedImages, emitter);
 
   return {
     questionId: question.id,
@@ -40,6 +58,7 @@ const runStream = async (
   questionId: string,
   solutionId: string,
   prompt: string,
+  images: ImageContext[],
   emitter: EventEmitter,
 ) => {
   let accumulated = "";
@@ -58,7 +77,8 @@ const runStream = async (
   }, 500);
 
   try {
-    const { iter, model, fallbackUsed } = await streamFromOpenRouter(prompt);
+    const messages = buildSolutionMessages(prompt, images);
+    const { iter, model, fallbackUsed } = await streamFromOpenRouter(messages);
 
     for await (const chunk of iter) {
       const text = chunk.choices[0]?.delta.content ?? "";

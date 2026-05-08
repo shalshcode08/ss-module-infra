@@ -91,10 +91,25 @@ model Question {
   attachments QuestionAttachment[]
   solutions   Solution[]
   share       Share?
+  images      QuestionImage[]
 
   @@index([userId])
   @@index([status])
   @@map("questions")
+}
+
+// model - question image ------------------------
+model QuestionImage {
+  id         String   @id
+  questionId String
+  url        String
+  position   Int
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("question_images")
 }
 
 // model - question attachment ------------------------

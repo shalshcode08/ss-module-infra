@@ -4,6 +4,7 @@ import authRouter from "../modules/auth/auth.router";
 import { sendSuccess } from "../shared/utils/response";
 import configRouter from "../modules/config/config.route";
 import conversationsRouter from "../modules/conversations/conversations.router";
+import imagesRouter from "../modules/images/images.router";
 
 const appRouter = Router();
 
@@ -18,5 +19,6 @@ appRouter.get("/health", (_req: Request, res: Response) => {
 appRouter.use("/auth", authRouter);
 appRouter.use("/config", configRouter);
 appRouter.use("/conversations", conversationsRouter);
+appRouter.use("/images", imagesRouter);
 
 export default appRouter;

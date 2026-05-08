@@ -16,6 +16,9 @@ export const config = {
   openRouter: {
     apiKey: required("OPENROUTER_API_KEY"),
   },
+  tavily: {
+    apiKey: required("TAVILY_API_KEY"),
+  },
 } as const;
 
 export type Config = typeof config;

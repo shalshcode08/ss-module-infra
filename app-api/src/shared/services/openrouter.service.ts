@@ -1,6 +1,7 @@
 import { OpenRouter } from "@openrouter/sdk";
 import { config } from "../../config";
 import { OPENROUTER_MODEL, type MODEL_ID } from "../constants";
+import type { ChatMessage } from "../prompts/solution.prompt";
 
 const client = new OpenRouter({
   apiKey: config.openRouter.apiKey,
@@ -12,7 +13,7 @@ export interface StreamResult {
   fallbackUsed: boolean;
 }
 
-export const streamFromOpenRouter = async (prompt: string): Promise<StreamResult> => {
+export const streamFromOpenRouter = async (messages: ChatMessage[]): Promise<StreamResult> => {
   let lastError: unknown;
 
   for (const [i, model] of OPENROUTER_MODEL.entries()) {
@@ -21,12 +22,7 @@ export const streamFromOpenRouter = async (prompt: string): Promise<StreamResult
         chatRequest: {
           stream: true,
           model: model,
-          messages: [
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
+          messages,
         },
       });
 
