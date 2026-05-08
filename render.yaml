@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: ss-module-api
+    runtime: node
+    rootDir: app-api
+    buildCommand: bun install && bun run build
+    startCommand: bun run start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_CLIENT_URL
+        sync: false
+      - key: APP_WEBSITE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: CLIENT_ID
+        sync: false
+      - key: CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false

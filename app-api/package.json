@@ -32,6 +32,8 @@
   },
   "scripts": {
     "dev": "bun --env-file=../.env --hot src/index.ts",
+    "build": "bunx prisma generate",
+    "start": "bun src/index.ts",
     "migrate": "bun --env-file=../.env run prisma migrate dev",
     "generate": "bun --env-file=../.env run prisma generate",
     "studio": "bun --env-file=../.env run prisma studio"
