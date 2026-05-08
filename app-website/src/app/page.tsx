@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { fetchPublicChats } from "@/lib/api";
+import { Pagination } from "@/components/Pagination";
 
 function stripMarkdown(md: string): string {
   return md
@@ -58,33 +59,7 @@ export default async function HomePage({
           })}
         </div>
 
-        {totalPages > 1 && (
-          <div className="mt-8 flex items-center justify-between">
-            {page > 1 ? (
-              <Link
-                href={`/?page=${page - 1}`}
-                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
-              >
-                ← Previous
-              </Link>
-            ) : (
-              <div />
-            )}
-            <span className="text-xs text-slate-400">
-              Page {page} of {totalPages}
-            </span>
-            {page < totalPages ? (
-              <Link
-                href={`/?page=${page + 1}`}
-                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
-              >
-                Next →
-              </Link>
-            ) : (
-              <div />
-            )}
-          </div>
-        )}
+        <Pagination page={page} totalPages={totalPages} />
       </div>
     </main>
   );

@@ -7,6 +7,7 @@ const required = (key: string): string => {
 export const config = {
   port: Number(required("APP_API_PORT")),
   clientUrl: required("APP_CLIENT_URL"),
+  websiteUrl: required("APP_WEBSITE_URL"),
   jwtSecret: required("JWT_SECRET"),
   google: {
     clientId: required("CLIENT_ID"),

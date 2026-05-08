@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
 import { Share2, Check } from "lucide-react";
 import { useConversationStore } from "@/stores/conversation.store";
 import { useSSE } from "@/hooks/useSSE";
 import { RichTextInput } from "@/components/RichTextInput";
+import { SolutionRenderer } from "@/components/SolutionRenderer";
 
 const WEBSITE_URL = import.meta.env.VITE_WEBSITE_URL ?? "";
 
@@ -238,11 +236,7 @@ export default function ChatPage() {
           )}
 
           {displayedContent && (
-            <div className="prose-answer">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                {displayedContent}
-              </ReactMarkdown>
-            </div>
+            <SolutionRenderer content={displayedContent} questionId={storeQuestionId} />
           )}
 
           {status === "failed" && !solutionContent && (

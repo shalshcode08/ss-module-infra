@@ -21,20 +21,20 @@ const createQuestion = async (userId: string, plainText: string, contentJson?: s
     },
   });
 
-  const tavilyImages = await fetchImages(plainText);
+  const imageSet = await fetchImages(plainText);
 
   let savedImages: ImageContext[] = [];
 
-  if (tavilyImages.length > 0) {
-    await prisma.questionImage.createMany({
-      data: tavilyImages.map((img) => ({
-        id: img.id,
+  if (imageSet) {
+    await prisma.questionImage.create({
+      data: {
+        id: imageSet.id,
         questionId: question.id,
-        url: img.url,
-        position: img.position,
-      })),
+        urls: imageSet.urls,
+        favicons: imageSet.favicons,
+      },
     });
-    savedImages = tavilyImages.map(({ id, position }) => ({ id, position }));
+    savedImages = [{ id: imageSet.id }];
   }
 
   const solution = await prisma.solution.create({

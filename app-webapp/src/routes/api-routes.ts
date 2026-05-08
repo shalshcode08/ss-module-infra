@@ -18,6 +18,10 @@ class API_ROUTES {
   static conversationsQuestion(questionId: string) {
     return `/conversations/question/${questionId}`;
   }
+
+  static questionImages(questionId: string) {
+    return `/images/question/${questionId}`;
+  }
 }
 
 export default API_ROUTES;
