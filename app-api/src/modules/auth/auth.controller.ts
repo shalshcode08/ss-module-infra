@@ -4,9 +4,12 @@ import { AuthService } from "./auth.service";
 import { sendSuccess } from "../../shared/utils/response";
 import { config } from "../../config";
 
+const isProd = process.env.NODE_ENV === "production";
+
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  sameSite: "lax" as const,
+  sameSite: (isProd ? "none" : "lax") as "none" | "lax",
+  secure: isProd,
   maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
