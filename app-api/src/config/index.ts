@@ -4,10 +4,20 @@ const required = (key: string): string => {
   return val;
 };
 
+const parseAllowedOrigins = (): string[] => {
+  const raw = process.env.ALLOWED_ORIGINS ?? "";
+  if (raw)
+    return raw
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean);
+  return [required("APP_CLIENT_URL"), required("APP_WEBSITE_URL")];
+};
+
 export const config = {
   port: Number(process.env.PORT ?? required("APP_API_PORT")),
   clientUrl: required("APP_CLIENT_URL"),
-  websiteUrl: required("APP_WEBSITE_URL"),
+  allowedOrigins: parseAllowedOrigins(),
   jwtSecret: required("JWT_SECRET"),
   google: {
     clientId: required("CLIENT_ID"),
