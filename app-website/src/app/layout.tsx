@@ -6,8 +6,23 @@ import "./globals.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 
 export const metadata: Metadata = {
-  title: "Community Q&A",
-  description: "AI-powered answers to community questions",
+  title: {
+    default: "SS Module",
+    template: "%s · SS Module",
+  },
+  description: "Ask questions. Get answers.",
+  themeColor: "#6366F1",
+  openGraph: {
+    type: "website",
+    siteName: "SS Module",
+    title: "SS Module",
+    description: "Ask questions. Get answers.",
+  },
+  twitter: {
+    card: "summary",
+    title: "SS Module",
+    description: "Ask questions. Get answers.",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
