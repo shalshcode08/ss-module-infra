@@ -5,6 +5,12 @@ import path from "path";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, "../", "");
+  const apiBaseUrl = (
+    env.VITE_API_URL ||
+    env.API_URL ||
+    `http://localhost:${env.APP_API_PORT || 8080}/api/v1`
+  ).replace(/\/+$/, "");
+
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
@@ -13,9 +19,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      "import.meta.env.VITE_API_URL": JSON.stringify(
-        `http://localhost:${env.APP_API_PORT}/api/v1`,
-      ),
+      "import.meta.env.VITE_API_URL": JSON.stringify(apiBaseUrl),
     },
     server: {
       port: Number(env.APP_WEBAPP_PORT) || 3000,
