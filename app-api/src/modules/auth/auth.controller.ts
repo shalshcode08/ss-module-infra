@@ -1,16 +1,19 @@
-import type { Request, Response, NextFunction } from "express";
+import type { CookieOptions, Request, Response, NextFunction } from "express";
 import { HttpError } from "../../shared/errors/HttpError";
 import { AuthService } from "./auth.service";
 import { sendSuccess } from "../../shared/utils/response";
 import { config } from "../../config";
 
-const isProd = process.env.NODE_ENV === "production";
-
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  sameSite: (isProd ? "none" : "lax") as "none" | "lax",
-  secure: isProd,
-  maxAge: 30 * 24 * 60 * 60 * 1000,
+const getCookieOptions = (req: Request): CookieOptions => {
+  const forwardedProto = req.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const isHttps = req.secure || forwardedProto === "https";
+  return {
+    httpOnly: true,
+    sameSite: isHttps ? "none" : "lax",
+    secure: isHttps,
+    path: "/",
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  };
 };
 
 export const AuthController = {
@@ -28,7 +31,8 @@ export const AuthController = {
       if (!code) throw HttpError.badRequest("Missing authorization code");
 
       const jwtToken = await AuthService.handleCallback(code);
-      res.cookie("auth_token", jwtToken, COOKIE_OPTIONS);
+      res.clearCookie("auth_token", { path: "/api/v1/auth" });
+      res.cookie("auth_token", jwtToken, getCookieOptions(req));
       res.redirect(`${config.clientUrl}/home`);
     } catch (err) {
       next(err);
@@ -46,7 +50,8 @@ export const AuthController = {
 
   logout: (_req: Request, res: Response, next: NextFunction) => {
     try {
-      res.clearCookie("auth_token");
+      res.clearCookie("auth_token", { path: "/api/v1/auth" });
+      res.clearCookie("auth_token", { path: "/" });
       sendSuccess(res, { message: "Logged out" });
     } catch (err) {
       next(err);
